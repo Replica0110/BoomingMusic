@@ -46,14 +46,18 @@ class TopAppBarLayout @JvmOverloads constructor(
                 CollapsingAppbarLayoutBinding.inflate(LayoutInflater.from(context), this, true)
             val isLandscape =
                 context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-            if (isLandscape) {
+            if (isLandscape || Preferences.ignoreSystemBarInsets) {
                 fitsSystemWindows = false
             }
 
         } else {
             simpleAppbarBinding =
                 SimpleAppbarLayoutBinding.inflate(LayoutInflater.from(context), this, true)
-            statusBarForeground = MaterialShapeDrawable.createWithElevationOverlay(context)
+            statusBarForeground = if (Preferences.ignoreSystemBarInsets) {
+                null
+            } else {
+                MaterialShapeDrawable.createWithElevationOverlay(context)
+            }
         }
     }
 

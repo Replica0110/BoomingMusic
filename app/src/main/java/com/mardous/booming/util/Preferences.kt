@@ -105,6 +105,9 @@ object Preferences : KoinComponent {
     val isCustomFont: Boolean
         get() = preferences.getBoolean(USE_CUSTOM_FONT, true)
 
+    val ignoreSystemBarInsets: Boolean
+        get() = preferences.getBoolean(IGNORE_SYSTEM_BAR_INSETS, false)
+
     val appBarMode: TopAppBarLayout.AppBarMode
         get() = when (preferences.requireString(APPBAR_MODE, AppBarMode.COMPACT)) {
             AppBarMode.COMPACT -> TopAppBarLayout.AppBarMode.SIMPLE
@@ -184,6 +187,18 @@ object Preferences : KoinComponent {
     var showLyricsOnCover: Boolean
         get() = preferences.getBoolean(LYRICS_ON_COVER, false)
         set(value) = preferences.edit { putBoolean(LYRICS_ON_COVER, value) }
+
+    val desktopLyricsEnabled: Boolean
+        get() = preferences.getBoolean(DESKTOP_LYRICS, false)
+
+    val statusBarLyricsEnabled: Boolean
+        get() = preferences.getBoolean(STATUS_BAR_LYRICS, false)
+
+    val desktopLyricsLocked: Boolean
+        get() = preferences.getBoolean(DESKTOP_LYRICS_LOCKED, false)
+
+    val desktopLyricsShowNextLine: Boolean
+        get() = preferences.getBoolean(DESKTOP_LYRICS_SHOW_NEXT_LINE, true)
 
     val swipeOnCover: Boolean
         get() = preferences.getBoolean(SWIPE_ON_COVER, true)
@@ -548,6 +563,7 @@ interface UpdateSearchMode {
 const val BLACK_THEME = "black_theme"
 const val MATERIAL_YOU = "material_you"
 const val USE_CUSTOM_FONT = "use_custom_font"
+const val IGNORE_SYSTEM_BAR_INSETS = "ignore_system_bar_insets"
 const val APPBAR_MODE = "appbar_mode"
 const val GENERAL_THEME = "general_theme"
 const val LIBRARY_CATEGORIES = "library_categories"
@@ -566,6 +582,19 @@ const val ADAPTIVE_CONTROLS = "adaptive_controls"
 const val SQUIGGLY_SEEK_BAR = "squiggly_seek_bar"
 const val SWIPE_DOWN_TO_DISMISS = "swipe_down_to_dismiss"
 const val LYRICS_ON_COVER = "lyrics_on_cover"
+const val DESKTOP_LYRICS = "desktop_lyrics"
+const val STATUS_BAR_LYRICS = "status_bar_lyrics"
+const val DESKTOP_LYRICS_LOCKED = "desktop_lyrics_locked"
+const val DESKTOP_LYRICS_SHOW_NEXT_LINE = "desktop_lyrics_show_next_line"
+const val DESKTOP_LYRICS_TEXT_SIZE = "desktop_lyrics_text_size"
+const val DESKTOP_LYRICS_TEXT_COLOR = "desktop_lyrics_text_color"
+const val STATUS_BAR_LYRICS_TEXT_SIZE = "status_bar_lyrics_text_size"
+const val STATUS_BAR_LYRICS_TEXT_COLOR = "status_bar_lyrics_text_color"
+const val DESKTOP_LYRICS_X = "desktop_lyrics_x"
+const val DESKTOP_LYRICS_Y = "desktop_lyrics_y"
+const val STATUS_BAR_LYRICS_X = "status_bar_lyrics_x"
+const val STATUS_BAR_LYRICS_Y = "status_bar_lyrics_y"
+const val STATUS_BAR_LYRICS_WIDTH = "status_bar_lyrics_width"
 const val SWIPE_ON_COVER = "swipe_on_cover"
 const val MINI_PLAYER_SWIPE_TO_SKIP = "mini_player_swipe_to_skip"
 const val NOW_PLAYING_SMALL_IMAGE = "now_playing_small_image"

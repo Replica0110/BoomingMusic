@@ -66,6 +66,7 @@ import com.mardous.booming.core.model.theme.NowPlayingScreen
 import com.mardous.booming.data.model.search.SearchQuery
 import com.mardous.booming.databinding.SlidingMusicPanelLayoutBinding
 import com.mardous.booming.extensions.applyWindowInsets
+import com.mardous.booming.extensions.applySystemBarInsetPreference
 import com.mardous.booming.extensions.currentFragment
 import com.mardous.booming.extensions.dip
 import com.mardous.booming.extensions.getBottomInsets
@@ -84,6 +85,7 @@ import com.mardous.booming.ui.screen.library.LibraryViewModel
 import com.mardous.booming.ui.screen.library.search.SearchFragment
 import com.mardous.booming.ui.screen.lyrics.LyricsEditorFragment
 import com.mardous.booming.ui.screen.lyrics.LyricsViewModel
+import com.mardous.booming.ui.overlay.LyricsOverlayService
 import com.mardous.booming.ui.screen.other.MiniPlayerFragment
 import com.mardous.booming.ui.screen.permissions.PermissionsActivity
 import com.mardous.booming.ui.screen.player.PlayerViewModel
@@ -178,6 +180,7 @@ abstract class AbsSlidingMusicPanelActivity : AbsBaseActivity(),
 
         binding = SlidingMusicPanelLayoutBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.root.applySystemBarInsetPreference()
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.sheetView) { _, insets ->
             insets.also { windowInsets = it }
@@ -248,6 +251,7 @@ abstract class AbsSlidingMusicPanelActivity : AbsBaseActivity(),
     override fun onResume() {
         super.onResume()
         Preferences.registerOnSharedPreferenceChangeListener(this)
+        LyricsOverlayService.sync(applicationContext)
         if (bottomSheetBehavior.state == STATE_EXPANDED) {
             setMiniPlayerAlphaProgress(1f)
         }

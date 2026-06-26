@@ -131,6 +131,34 @@
         <item>lrc</item>
     </string-array>
 
+    <string-array name="pref_lyrics_overlay_color_entries">
+        <item>@string/lyrics_overlay_color_red</item>
+        <item>@string/lyrics_overlay_color_orange</item>
+        <item>@string/lyrics_overlay_color_lime</item>
+        <item>@string/lyrics_overlay_color_white</item>
+        <item>@string/lyrics_overlay_color_yellow</item>
+        <item>@string/lyrics_overlay_color_green</item>
+        <item>@string/lyrics_overlay_color_teal</item>
+        <item>@string/lyrics_overlay_color_blue</item>
+        <item>@string/lyrics_overlay_color_purple</item>
+        <item>@string/lyrics_overlay_color_pink</item>
+        <item>@string/lyrics_overlay_color_gray</item>
+    </string-array>
+
+    <string-array name="pref_lyrics_overlay_color_values">
+        <item>#FFE57373</item>
+        <item>#FFE79A61</item>
+        <item>#FFB6D35A</item>
+        <item>#FFFFFFFF</item>
+        <item>#FFFFD54F</item>
+        <item>#FF80CBC4</item>
+        <item>#FF46BFA1</item>
+        <item>#FF90CAF9</item>
+        <item>#FF8E7DDE</item>
+        <item>#FFF48FB1</item>
+        <item>#FF666666</item>
+    </string-array>
+
     <string-array name="pref_playlists_cutoff_entries">
         <item>@string/today</item>
         <item>@string/yesterday</item>

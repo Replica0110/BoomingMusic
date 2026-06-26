@@ -17,10 +17,12 @@
 
 package com.mardous.booming.ui.screen.settings
 
+import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.View
 import androidx.activity.result.ActivityResultLauncher
@@ -36,6 +38,8 @@ import androidx.navigation.fragment.findNavController
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.SeekBarPreference
+import androidx.preference.SwitchPreferenceCompat
 import coil3.SingletonImageLoader
 import com.google.android.material.color.DynamicColors
 import com.mardous.booming.BuildConfig
@@ -66,6 +70,7 @@ import com.mardous.booming.ui.component.preferences.dialog.SingleSelectionDialog
 import com.mardous.booming.ui.component.preferences.dialog.SongClickActionPreferenceDialog
 import com.mardous.booming.ui.dialogs.MultiCheckDialog
 import com.mardous.booming.ui.dialogs.library.BlacklistWhitelistDialog
+import com.mardous.booming.ui.overlay.LyricsOverlayService
 import com.mardous.booming.ui.screen.library.LibraryViewModel
 import com.mardous.booming.ui.screen.library.ReloadType
 import com.mardous.booming.ui.screen.scrobbling.ScrobblingServiceLoginFragment
@@ -83,9 +88,15 @@ import com.mardous.booming.util.COVER_LEFT_DOUBLE_TAP_ACTION
 import com.mardous.booming.util.COVER_LONG_PRESS_ACTION
 import com.mardous.booming.util.COVER_RIGHT_DOUBLE_TAP_ACTION
 import com.mardous.booming.util.COVER_SINGLE_TAP_ACTION
+import com.mardous.booming.util.DESKTOP_LYRICS
+import com.mardous.booming.util.DESKTOP_LYRICS_LOCKED
+import com.mardous.booming.util.DESKTOP_LYRICS_SHOW_NEXT_LINE
+import com.mardous.booming.util.DESKTOP_LYRICS_TEXT_COLOR
+import com.mardous.booming.util.DESKTOP_LYRICS_TEXT_SIZE
 import com.mardous.booming.util.ENABLE_ROTATION_LOCK
 import com.mardous.booming.util.GENERAL_THEME
 import com.mardous.booming.util.IGNORE_MEDIA_STORE
+import com.mardous.booming.util.IGNORE_SYSTEM_BAR_INSETS
 import com.mardous.booming.util.LANGUAGE_NAME
 import com.mardous.booming.util.LASTFM_LOGIN
 import com.mardous.booming.util.LAST_ADDED_CUTOFF
@@ -99,6 +110,12 @@ import com.mardous.booming.util.ON_SONG_CLICK_ACTION
 import com.mardous.booming.util.PREFERRED_IMAGE_SIZE
 import com.mardous.booming.util.Preferences
 import com.mardous.booming.util.RESTORE_DATA
+import com.mardous.booming.util.STATUS_BAR_LYRICS
+import com.mardous.booming.util.STATUS_BAR_LYRICS_TEXT_COLOR
+import com.mardous.booming.util.STATUS_BAR_LYRICS_TEXT_SIZE
+import com.mardous.booming.util.STATUS_BAR_LYRICS_WIDTH
+import com.mardous.booming.util.STATUS_BAR_LYRICS_X
+import com.mardous.booming.util.STATUS_BAR_LYRICS_Y
 import com.mardous.booming.util.TRASH_MUSIC_FILES
 import com.mardous.booming.util.USE_CUSTOM_FONT
 import com.mardous.booming.util.USE_FOLDER_ART
@@ -265,6 +282,19 @@ open class PreferenceScreenFragment : PreferenceFragmentCompat(),
             true
         }
 
+        findPreference<Preference>(IGNORE_SYSTEM_BAR_INSETS)?.setOnPreferenceChangeListener { _, _ ->
+            requireActivity().recreate()
+            true
+        }
+
+        findPreference<Preference>(DESKTOP_LYRICS)?.setOnPreferenceChangeListener { _, newValue ->
+            handleOverlayLyricsPreferenceChange(newValue as Boolean)
+        }
+
+        findPreference<Preference>(STATUS_BAR_LYRICS)?.setOnPreferenceChangeListener { _, newValue ->
+            handleOverlayLyricsPreferenceChange(newValue as Boolean)
+        }
+
         findPreference<Preference>(WIDGET_IMAGE_CORNER_RADIUS)?.isVisible = hasS()
         findPreference<Preference>(ADD_EXTRA_CONTROLS)?.isVisible = !resources.isTablet
 
@@ -401,6 +431,12 @@ open class PreferenceScreenFragment : PreferenceFragmentCompat(),
         onUpdateQueuePreferences()
     }
 
+    override fun onResume() {
+        super.onResume()
+        syncOverlayLyricsPreferences()
+        LyricsOverlayService.sync(requireContext().applicationContext)
+    }
+
     @Suppress("DEPRECATION")
     override fun onDisplayPreferenceDialog(preference: Preference) {
         if (preference is ListPreference) {
@@ -457,6 +493,68 @@ open class PreferenceScreenFragment : PreferenceFragmentCompat(),
             ON_SONG_CLICK_ACTION,
             ON_CLEAR_QUEUE_ACTION -> onUpdateQueuePreferences()
             LyricsViewSettings.Key.BACKGROUND_EFFECT -> onUpdateLyricsPreferences()
+            DESKTOP_LYRICS,
+            DESKTOP_LYRICS_LOCKED,
+            DESKTOP_LYRICS_SHOW_NEXT_LINE,
+            DESKTOP_LYRICS_TEXT_SIZE,
+            DESKTOP_LYRICS_TEXT_COLOR,
+            STATUS_BAR_LYRICS,
+            STATUS_BAR_LYRICS_X,
+            STATUS_BAR_LYRICS_Y,
+            STATUS_BAR_LYRICS_WIDTH,
+            STATUS_BAR_LYRICS_TEXT_SIZE,
+            STATUS_BAR_LYRICS_TEXT_COLOR -> syncOverlayLyricsPreference(key)
+        }
+    }
+
+    private fun syncOverlayLyricsPreferences() {
+        listOf(
+            DESKTOP_LYRICS,
+            DESKTOP_LYRICS_LOCKED,
+            DESKTOP_LYRICS_SHOW_NEXT_LINE,
+            DESKTOP_LYRICS_TEXT_SIZE,
+            DESKTOP_LYRICS_TEXT_COLOR,
+            STATUS_BAR_LYRICS,
+            STATUS_BAR_LYRICS_X,
+            STATUS_BAR_LYRICS_Y,
+            STATUS_BAR_LYRICS_WIDTH,
+            STATUS_BAR_LYRICS_TEXT_SIZE,
+            STATUS_BAR_LYRICS_TEXT_COLOR
+        ).forEach(::syncOverlayLyricsPreference)
+    }
+
+    private fun syncOverlayLyricsPreference(key: String?) {
+        when (key) {
+            DESKTOP_LYRICS,
+            DESKTOP_LYRICS_LOCKED,
+            DESKTOP_LYRICS_SHOW_NEXT_LINE,
+            STATUS_BAR_LYRICS -> findPreference<SwitchPreferenceCompat>(key)?.apply {
+                val value = preferences.getBoolean(key, key == DESKTOP_LYRICS_SHOW_NEXT_LINE)
+                if (isChecked != value) {
+                    isChecked = value
+                }
+            }
+            DESKTOP_LYRICS_TEXT_SIZE -> syncSeekBarPreference(key, 22)
+            STATUS_BAR_LYRICS_X -> syncSeekBarPreference(key, 50)
+            STATUS_BAR_LYRICS_Y -> syncSeekBarPreference(key, 0)
+            STATUS_BAR_LYRICS_WIDTH -> syncSeekBarPreference(key, 160)
+            STATUS_BAR_LYRICS_TEXT_SIZE -> syncSeekBarPreference(key, 14)
+            DESKTOP_LYRICS_TEXT_COLOR,
+            STATUS_BAR_LYRICS_TEXT_COLOR -> findPreference<ListPreference>(key)?.apply {
+                val value = preferences.getString(key, "#FFFFFFFF")
+                if (value != null && this.value != value) {
+                    this.value = value
+                }
+            }
+        }
+    }
+
+    private fun syncSeekBarPreference(key: String, defaultValue: Int) {
+        findPreference<SeekBarPreference>(key)?.apply {
+            val value = preferences.getInt(key, defaultValue)
+            if (this.value != value) {
+                this.value = value
+            }
         }
     }
 
@@ -512,6 +610,22 @@ open class PreferenceScreenFragment : PreferenceFragmentCompat(),
         } catch (e: Exception) {
             Log.e("Settings", "Failed to clear image loader cache", e)
         }
+    }
+
+    private fun handleOverlayLyricsPreferenceChange(enabled: Boolean): Boolean {
+        if (enabled && !LyricsOverlayService.canDrawOverlays(requireContext())) {
+            showToast(R.string.overlay_permission_required)
+            startActivity(
+                Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:${requireContext().packageName}")
+                )
+            )
+        }
+        view?.post {
+            LyricsOverlayService.sync(requireContext().applicationContext)
+        }
+        return true
     }
 
     private fun updateSearchState(preference: ProgressIndicatorPreference?, lastUpdateSearch: Long) {

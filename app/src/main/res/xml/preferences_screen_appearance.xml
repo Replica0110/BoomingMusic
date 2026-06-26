@@ -100,6 +100,15 @@
             app:widgetLayout="@layout/preference_switch"
             app:key="larger_header_image"/>
 
+        <SwitchPreferenceCompat
+            app:icon="@drawable/ic_open_in_full_24dp"
+            app:title="@string/ignore_system_bar_insets_title"
+            app:summary="@string/ignore_system_bar_insets_summary"
+            app:defaultValue="false"
+            app:layout="@layout/list_item_view"
+            app:widgetLayout="@layout/preference_switch"
+            app:key="ignore_system_bar_insets"/>
+
     </PreferenceCategory>
 
     <PreferenceCategory

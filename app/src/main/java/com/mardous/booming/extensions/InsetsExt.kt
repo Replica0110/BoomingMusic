@@ -24,6 +24,7 @@ import android.view.ViewGroup.LAYOUT_DIRECTION_RTL
 import android.view.ViewGroup.MarginLayoutParams
 import android.widget.Button
 import android.widget.ImageView
+import androidx.core.graphics.Insets
 import androidx.core.view.NestedScrollingChild3
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -35,8 +36,12 @@ import androidx.core.view.marginTop
 import androidx.core.view.updateLayoutParams
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.mardous.booming.R
+import com.mardous.booming.util.Preferences
 
 fun WindowInsetsCompat?.getBottomInsets(context: Context): Int {
+    if (Preferences.ignoreSystemBarInsets) {
+        return 0
+    }
     return this?.getInsets(Type.systemBars())?.bottom
         ?: context.getNavigationBarHeight()
 }
@@ -106,7 +111,7 @@ fun View.applyWindowInsets(
             return@setOnApplyWindowInsetsListener insets
 
         val mask = Type.systemBars() or Type.displayCutout() or if (ime) Type.ime() else 0
-        val i = insets.getInsets(mask)
+        val i = if (Preferences.ignoreSystemBarInsets) Insets.NONE else insets.getInsets(mask)
         val start = if (layoutDirection == LAYOUT_DIRECTION_RTL) i.right else i.left
         val end = if (layoutDirection == LAYOUT_DIRECTION_RTL) i.left else i.right
         val currentValues = v.currentSpace(padding)
@@ -131,6 +136,21 @@ fun View.applyWindowInsets(
         setTag(R.id.id_inset_consumed, true)
         consumer?.invoke(v, insets)
         insets
+    }
+}
+
+fun View.applySystemBarInsetPreference() {
+    if (!Preferences.ignoreSystemBarInsets) return
+    disableFitsSystemWindows()
+    ViewCompat.requestApplyInsets(this)
+}
+
+private fun View.disableFitsSystemWindows() {
+    fitsSystemWindows = false
+    if (this is ViewGroup) {
+        for (i in 0 until childCount) {
+            getChildAt(i).disableFitsSystemWindows()
+        }
     }
 }
 
