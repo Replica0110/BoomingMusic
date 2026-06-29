@@ -51,7 +51,7 @@ import com.mardous.booming.data.model.lyrics.LyricsSource
 import com.mardous.booming.data.model.lyrics.SyncedLyrics
 import com.mardous.booming.extensions.media.displayArtistName
 import com.mardous.booming.playback.PlaybackService
-import com.mardous.booming.playback.progress.ProgressObserver
+import com.mardous.booming.playback.ProgressObserver
 import com.mardous.booming.util.DESKTOP_LYRICS
 import com.mardous.booming.util.DESKTOP_LYRICS_LOCKED
 import com.mardous.booming.util.DESKTOP_LYRICS_SHOW_NEXT_LINE
