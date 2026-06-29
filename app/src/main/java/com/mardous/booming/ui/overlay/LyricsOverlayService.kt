@@ -26,6 +26,7 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.view.Display
 import android.view.Choreographer
+import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
@@ -48,6 +49,7 @@ import com.mardous.booming.data.local.repository.Repository
 import com.mardous.booming.data.model.Song
 import com.mardous.booming.data.model.lyrics.LyricsSource
 import com.mardous.booming.data.model.lyrics.SyncedLyrics
+import com.mardous.booming.extensions.media.displayArtistName
 import com.mardous.booming.playback.PlaybackService
 import com.mardous.booming.playback.progress.ProgressObserver
 import com.mardous.booming.util.DESKTOP_LYRICS
@@ -93,6 +95,7 @@ class LyricsOverlayService : Service(), Player.Listener, SharedPreferences.OnSha
     private var statusWindow: OverlayWindow? = null
     private var lyricsJob: Job? = null
     private var overlayLyrics: OverlayLyrics = OverlayLyrics.Empty
+    private var currentSong: Song = Song.emptySong
     private var currentSongId: Long = Song.emptySong.id
     private var lastDesktopText: String = ""
     private var lastStatusText: String = ""
@@ -345,15 +348,18 @@ class LyricsOverlayService : Service(), Player.Listener, SharedPreferences.OnSha
         val mediaItem = controller?.currentMediaItem
         lyricsJob?.cancel()
         if (mediaItem == null) {
+            currentSong = Song.emptySong
             currentSongId = Song.emptySong.id
             overlayLyrics = OverlayLyrics.Empty
             updateLyricText(force = true)
             return
         }
+        currentSong = Song.emptySong
         lyricsJob = serviceScope.launch {
             val song = withContext(IO) {
                 repository.songByMediaItem(mediaItem)
             }
+            currentSong = song
             currentSongId = song.id
             overlayLyrics = withContext(IO) {
                 findLyrics(song)
@@ -373,8 +379,9 @@ class LyricsOverlayService : Service(), Player.Listener, SharedPreferences.OnSha
             } ?: continue
 
             val syncedLyrics = lyricsRepository.parseRawLyrics(song, rawLyrics)
-            if (syncedLyrics?.hasContent == true) {
-                return OverlayLyrics(syncedLyrics, emptyList())
+            val overlaySyncedLyrics = syncedLyrics?.forOverlay()
+            if (overlaySyncedLyrics?.hasContent == true) {
+                return OverlayLyrics(overlaySyncedLyrics, emptyList())
             }
             if (plainLyrics.isNullOrBlank()) {
                 plainLyrics = rawLyrics.lyrics
@@ -498,10 +505,12 @@ class LyricsOverlayService : Service(), Player.Listener, SharedPreferences.OnSha
     }
 
     private fun SyncedLyrics.TextContent.canUseSmoothDesktopKaraoke(): Boolean =
-        preferences.getBoolean(LyricsViewSettings.Key.ENABLE_SYLLABLE_LYRICS, false) && mainSyllables.isNotEmpty()
+        preferences.getBoolean(LyricsViewSettings.Key.ENABLE_SYLLABLE_LYRICS, false) &&
+                mainSyllables.any { it.content.isNotEmpty() }
 
     private fun SyncedLyrics.TextContent.canUsePipelineKaraoke(): Boolean =
-        preferences.getBoolean(LyricsViewSettings.Key.ENABLE_SYLLABLE_LYRICS, false) && mainSyllables.isNotEmpty()
+        preferences.getBoolean(LyricsViewSettings.Key.ENABLE_SYLLABLE_LYRICS, false) &&
+                mainSyllables.any { it.content.isNotEmpty() }
 
     private fun currentStatusLyricText(): LyricRenderText {
         val mediaController = controller ?: return placeholderLyricText(
@@ -564,21 +573,31 @@ class LyricsOverlayService : Service(), Player.Listener, SharedPreferences.OnSha
     ): LyricRenderText {
         val title = currentSongTitle()
         val artist = currentSongArtist().takeIf { includeArtist && it.isNotBlank() }
-        val primary = if (outlined) title.toOutlinedText(Color.WHITE) else title
-        val secondary = if (outlined) artist?.toOutlinedText(Color.WHITE) else artist
+        val text = if (artist != null) "$title - $artist" else title
+        val primary = if (outlined) text.toOutlinedText(Color.WHITE) else text
         return LyricRenderText(
             primary = primary,
-            secondary = secondary,
-            key = "$prefix:$title:$artist",
+            secondary = null,
+            key = "$prefix:$text",
             highlightColor = color
         )
     }
 
-    private fun currentSongTitle(): String =
-        controller?.mediaMetadata?.title?.toString().orEmpty().ifBlank { getString(R.string.now_playing) }
+    private fun currentSongTitle(): String {
+        val song = currentSong.takeIf { it != Song.emptySong }
+        val songTitle = song?.title?.takeIf { it.isNotBlank() }
+            ?: song?.fileName?.takeIf { it.isNotBlank() }
+        return songTitle
+            ?: controller?.mediaMetadata?.title?.toString().orEmpty().ifBlank {
+                getString(R.string.now_playing)
+            }
+    }
 
-    private fun currentSongArtist(): String =
-        controller?.mediaMetadata?.artist?.toString().orEmpty()
+    private fun currentSongArtist(): String {
+        val song = currentSong.takeIf { it != Song.emptySong }
+        return song?.displayArtistName()?.takeIf { it.isNotBlank() }
+            ?: controller?.mediaMetadata?.artist?.toString().orEmpty()
+    }
 
     private fun SyncedLyrics.Line.secondaryOverlayText(
         nextLine: SyncedLyrics.Line?,
@@ -615,6 +634,7 @@ class LyricsOverlayService : Service(), Player.Listener, SharedPreferences.OnSha
         val syllables = content.mainSyllables
         val enableSyllable = preferences.getBoolean(LyricsViewSettings.Key.ENABLE_SYLLABLE_LYRICS, false)
         if (!enableSyllable || syllables.isEmpty()) {
+            if (content.content.isEmpty()) return
             val start = builder.length
             builder.append(content.content)
             builder.setSpan(OutlinedTextSpan(color), start, builder.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
@@ -623,6 +643,7 @@ class LyricsOverlayService : Service(), Player.Listener, SharedPreferences.OnSha
 
         val karaokeStyle = preferences.getBoolean(LyricsViewSettings.Key.ENABLE_KARAOKE_STYLE, false)
         syllables.forEach { word ->
+            if (word.content.isEmpty()) return@forEach
             val start = builder.length
             builder.append(word.content)
             val wordColor = when {
@@ -646,6 +667,13 @@ class LyricsOverlayService : Service(), Player.Listener, SharedPreferences.OnSha
         val index = lineIndexAt(position)
         return if (index >= 0) lines.getOrNull(index) else null
     }
+
+    private fun SyncedLyrics.forOverlay(): SyncedLyrics? =
+        copy(lines = lines.filter { it.hasDisplayableOverlayContent() })
+            .takeIf { it.lines.isNotEmpty() }
+
+    private fun SyncedLyrics.Line.hasDisplayableOverlayContent(): Boolean =
+        content.content.isNotBlank() || content.mainSyllables.any { it.content.isNotBlank() }
 
     private fun SyncedLyrics.lineIndexAt(position: Long): Int {
         for (i in lines.lastIndex downTo 0) {
@@ -847,11 +875,11 @@ class LyricsOverlayService : Service(), Player.Listener, SharedPreferences.OnSha
                     preferences.edit { putBoolean(DESKTOP_LYRICS_LOCKED, true) }
                 })
                 addView(iconButton(R.drawable.ic_previous_24dp, R.string.action_previous) {
-                    controller?.seekToPreviousMediaItem()
+                    dispatchPlaybackKey(KeyEvent.KEYCODE_MEDIA_PREVIOUS)
                 })
                 addView(playPauseButton)
                 addView(iconButton(R.drawable.ic_next_24dp, R.string.action_next) {
-                    controller?.seekToNextMediaItem()
+                    dispatchPlaybackKey(KeyEvent.KEYCODE_MEDIA_NEXT)
                 })
                 addView(iconButton(R.drawable.ic_close_24dp, R.string.action_cancel) {
                     setExpanded(false)
@@ -1004,7 +1032,7 @@ class LyricsOverlayService : Service(), Player.Listener, SharedPreferences.OnSha
                         setColor(color)
                         setStroke(dp(2), if (color == textColor) Color.WHITE else 0x33FFFFFF)
                     }
-                    setOnClickListener {
+                    setOverlayClickAction {
                         preferences.edit { putString(DESKTOP_LYRICS_TEXT_COLOR, colorValue) }
                     }
                 }, LayoutParams(dp(24), dp(24)).apply {
@@ -1024,7 +1052,7 @@ class LyricsOverlayService : Service(), Player.Listener, SharedPreferences.OnSha
                 }
                 contentDescription = getString(description)
                 setPadding(dp(9), dp(9), dp(9), dp(9))
-                setOnClickListener { onClick() }
+                setOverlayClickAction(onClick)
             }.also { button ->
                 button.layoutParams = LayoutParams(dp(40), dp(40)).apply {
                     marginStart = dp(3)
@@ -1042,7 +1070,7 @@ class LyricsOverlayService : Service(), Player.Listener, SharedPreferences.OnSha
                 includeFontPadding = false
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
                 background = panelBackground(0x22FFFFFF)
-                setOnClickListener { onClick() }
+                setOverlayClickAction(onClick)
             }.also { view ->
                 view.layoutParams = LayoutParams(dp(widthDp), dp(heightDp)).apply {
                     marginStart = dp(2)
@@ -1062,6 +1090,36 @@ class LyricsOverlayService : Service(), Player.Listener, SharedPreferences.OnSha
             val newSize = (preferences.getInt(DESKTOP_LYRICS_TEXT_SIZE, 22) + delta).coerceIn(12, 48)
             preferences.edit { putInt(DESKTOP_LYRICS_TEXT_SIZE, newSize) }
         }
+
+        private fun View.setOverlayClickAction(onClick: () -> Unit) {
+            setOnTouchListener { view, event ->
+                when (event.actionMasked) {
+                    MotionEvent.ACTION_DOWN -> {
+                        view.isPressed = true
+                        true
+                    }
+                    MotionEvent.ACTION_UP -> {
+                        view.isPressed = false
+                        onClick()
+                        view.performClick()
+                        true
+                    }
+                    MotionEvent.ACTION_CANCEL -> {
+                        view.isPressed = false
+                        true
+                    }
+                    else -> true
+                }
+            }
+            setOnClickListener(null)
+        }
+    }
+
+    private fun dispatchPlaybackKey(keyCode: Int) {
+        val intent = Intent(Intent.ACTION_MEDIA_BUTTON)
+            .setComponent(ComponentName(this, PlaybackService::class.java))
+            .putExtra(Intent.EXTRA_KEY_EVENT, KeyEvent(KeyEvent.ACTION_DOWN, keyCode))
+        startService(intent)
     }
 
     private inner class PipelineLyricView(context: Context) : View(context), Choreographer.FrameCallback {
@@ -1642,13 +1700,14 @@ class LyricsOverlayService : Service(), Player.Listener, SharedPreferences.OnSha
 
             fun from(text: LyricRenderText, paint: Paint): RenderModel {
                 val content = text.content
-                val model = if (content != null && content.mainSyllables.isNotEmpty()) {
+                val words = content?.mainSyllables?.filter { it.content.isNotEmpty() }.orEmpty()
+                val model = if (content != null && words.isNotEmpty()) {
                     RenderModel(
                         identity = text.key,
                         text = content.content,
-                        begin = content.mainSyllables.first().start,
-                        end = content.mainSyllables.last().end,
-                        words = content.mainSyllables.map {
+                        begin = words.first().start,
+                        end = words.last().end,
+                        words = words.map {
                             RenderWord(
                                 text = it.content,
                                 start = it.start,

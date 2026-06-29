@@ -32,7 +32,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.mardous.booming.R
 import com.mardous.booming.core.model.MediaEvent
-import com.mardous.booming.extensions.applySystemBarInsetPreference
+import com.mardous.booming.extensions.applyCarDisplayImmersiveLayout
 import com.mardous.booming.extensions.applyWindowInsets
 import com.mardous.booming.extensions.dip
 import com.mardous.booming.extensions.isLandscape
@@ -63,7 +63,7 @@ abstract class AbsMainActivityFragment @JvmOverloads constructor(@LayoutRes layo
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        view.applySystemBarInsetPreference()
+        view.applyCarDisplayImmersiveLayout()
         val menuHost: MenuHost = requireActivity()
         menuHost.addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.STARTED)
         viewLifecycleOwner.lifecycleScope.launch {

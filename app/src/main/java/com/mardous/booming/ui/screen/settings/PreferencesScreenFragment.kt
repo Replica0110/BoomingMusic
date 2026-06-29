@@ -96,7 +96,7 @@ import com.mardous.booming.util.DESKTOP_LYRICS_TEXT_SIZE
 import com.mardous.booming.util.ENABLE_ROTATION_LOCK
 import com.mardous.booming.util.GENERAL_THEME
 import com.mardous.booming.util.IGNORE_MEDIA_STORE
-import com.mardous.booming.util.IGNORE_SYSTEM_BAR_INSETS
+import com.mardous.booming.util.CAR_DISPLAY_IMMERSIVE_MODE
 import com.mardous.booming.util.LANGUAGE_NAME
 import com.mardous.booming.util.LASTFM_LOGIN
 import com.mardous.booming.util.LAST_ADDED_CUTOFF
@@ -282,7 +282,7 @@ open class PreferenceScreenFragment : PreferenceFragmentCompat(),
             true
         }
 
-        findPreference<Preference>(IGNORE_SYSTEM_BAR_INSETS)?.setOnPreferenceChangeListener { _, _ ->
+        findPreference<Preference>(CAR_DISPLAY_IMMERSIVE_MODE)?.setOnPreferenceChangeListener { _, _ ->
             requireActivity().recreate()
             true
         }

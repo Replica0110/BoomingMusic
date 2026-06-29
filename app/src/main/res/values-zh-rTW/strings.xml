@@ -567,8 +567,8 @@
     <string name="hold_tab_to_search_summary">長按任意導航欄選項卡打開搜尋界面。</string>
     <string name="larger_header_image_title">更大的封面圖像</string>
     <string name="larger_header_image_summary">在專輯、藝人和播放清單的詳細訊息中顯示更大的封面圖像。</string>
-    <string name="ignore_system_bar_insets_title">車機邊緣模式</string>
-    <string name="ignore_system_bar_insets_summary">不為狀態列和導覽列預留空間。適用於沒有系統列的車機螢幕。</string>
+    <string name="ignore_system_bar_insets_title">車機沉浸模式</string>
+    <string name="ignore_system_bar_insets_summary">隱藏狀態列和導覽列，讓車機介面以全螢幕方式顯示。</string>
     <string name="lyrics_center_current_line_title">居中當前歌詞</string>
     <string name="lyrics_center_current_line_summary">將當前歌詞行居中顯示，而不是左對齊。</string>
     <string name="lyrics_custom_font_title">自訂歌詞字體</string>

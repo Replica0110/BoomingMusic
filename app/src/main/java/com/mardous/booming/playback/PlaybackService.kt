@@ -417,6 +417,18 @@ class PlaybackService :
         intent: Intent
     ): Boolean {
         val ke = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_KEY_EVENT, KeyEvent::class.java)
+        if (ke != null && ke.action == KeyEvent.ACTION_DOWN && ke.repeatCount == 0) {
+            when (ke.keyCode) {
+                KeyEvent.KEYCODE_MEDIA_NEXT -> {
+                    player.seekToNext()
+                    return true
+                }
+                KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
+                    player.seekToPrevious()
+                    return true
+                }
+            }
+        }
         if (ke != null && (ke.keyCode == KeyEvent.KEYCODE_HEADSETHOOK || ke.keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE)) {
             if (ke.action == KeyEvent.ACTION_DOWN && ke.repeatCount == 0) {
                 headsetClickCount++

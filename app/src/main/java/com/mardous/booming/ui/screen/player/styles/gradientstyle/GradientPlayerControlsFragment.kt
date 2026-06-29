@@ -29,6 +29,7 @@ import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import com.google.android.material.button.MaterialButton
 import com.mardous.booming.R
+import com.mardous.booming.extensions.systemBarsForLayout
 import com.mardous.booming.core.model.action.NowPlayingAction
 import com.mardous.booming.core.model.player.PlayerColorScheme
 import com.mardous.booming.core.model.player.PlayerTintTarget
@@ -84,7 +85,7 @@ class GradientPlayerControlsFragment : AbsPlayerControlsFragment(R.layout.fragme
             val displayCutout = insets.getInsets(Type.displayCutout())
             v.updatePadding(left = displayCutout.left, right = displayCutout.right)
             if (view.resources.isLandscape) {
-                val systemBars = insets.getInsets(Type.systemBars())
+                val systemBars = insets.systemBarsForLayout()
                 v.updatePadding(top = systemBars.top)
             }
             insets

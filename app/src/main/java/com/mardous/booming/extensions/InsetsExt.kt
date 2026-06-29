@@ -39,11 +39,16 @@ import com.mardous.booming.R
 import com.mardous.booming.util.Preferences
 
 fun WindowInsetsCompat?.getBottomInsets(context: Context): Int {
-    if (Preferences.ignoreSystemBarInsets) {
-        return 0
-    }
-    return this?.getInsets(Type.systemBars())?.bottom
+    return this?.systemBarsForLayout()?.bottom
         ?: context.getNavigationBarHeight()
+}
+
+fun WindowInsetsCompat.systemBarsForLayout(): Insets {
+    return if (Preferences.carDisplayImmersiveMode) {
+        Insets.NONE
+    } else {
+        getInsets(Type.systemBars())
+    }
 }
 
 typealias InsetsConsumer = (View, WindowInsetsCompat) -> Unit
@@ -110,8 +115,10 @@ fun View.applyWindowInsets(
         if (getTag(R.id.id_inset_consumed) == true)
             return@setOnApplyWindowInsetsListener insets
 
-        val mask = Type.systemBars() or Type.displayCutout() or if (ime) Type.ime() else 0
-        val i = if (Preferences.ignoreSystemBarInsets) Insets.NONE else insets.getInsets(mask)
+        val systemBars = insets.systemBarsForLayout()
+        val displayCutout = insets.getInsets(Type.displayCutout())
+        val imeInsets = if (ime) insets.getInsets(Type.ime()) else Insets.NONE
+        val i = Insets.max(Insets.max(systemBars, displayCutout), imeInsets)
         val start = if (layoutDirection == LAYOUT_DIRECTION_RTL) i.right else i.left
         val end = if (layoutDirection == LAYOUT_DIRECTION_RTL) i.left else i.right
         val currentValues = v.currentSpace(padding)
@@ -139,8 +146,8 @@ fun View.applyWindowInsets(
     }
 }
 
-fun View.applySystemBarInsetPreference() {
-    if (!Preferences.ignoreSystemBarInsets) return
+fun View.applyCarDisplayImmersiveLayout() {
+    if (!Preferences.carDisplayImmersiveMode) return
     disableFitsSystemWindows()
     ViewCompat.requestApplyInsets(this)
 }

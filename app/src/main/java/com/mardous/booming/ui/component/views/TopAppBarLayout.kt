@@ -41,19 +41,22 @@ class TopAppBarLayout @JvmOverloads constructor(
     val mode: AppBarMode = Preferences.appBarMode
 
     init {
+        if (Preferences.carDisplayImmersiveMode) {
+            fitsSystemWindows = false
+        }
         if (mode == AppBarMode.COLLAPSING) {
             collapsingAppbarBinding =
                 CollapsingAppbarLayoutBinding.inflate(LayoutInflater.from(context), this, true)
             val isLandscape =
                 context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-            if (isLandscape || Preferences.ignoreSystemBarInsets) {
+            if (isLandscape) {
                 fitsSystemWindows = false
             }
 
         } else {
             simpleAppbarBinding =
                 SimpleAppbarLayoutBinding.inflate(LayoutInflater.from(context), this, true)
-            statusBarForeground = if (Preferences.ignoreSystemBarInsets) {
+            statusBarForeground = if (Preferences.carDisplayImmersiveMode) {
                 null
             } else {
                 MaterialShapeDrawable.createWithElevationOverlay(context)

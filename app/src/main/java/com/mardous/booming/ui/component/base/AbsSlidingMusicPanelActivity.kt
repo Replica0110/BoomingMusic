@@ -65,8 +65,8 @@ import com.mardous.booming.core.model.action.QueueClearingBehavior
 import com.mardous.booming.core.model.theme.NowPlayingScreen
 import com.mardous.booming.data.model.search.SearchQuery
 import com.mardous.booming.databinding.SlidingMusicPanelLayoutBinding
+import com.mardous.booming.extensions.applyCarDisplayImmersiveLayout
 import com.mardous.booming.extensions.applyWindowInsets
-import com.mardous.booming.extensions.applySystemBarInsetPreference
 import com.mardous.booming.extensions.currentFragment
 import com.mardous.booming.extensions.dip
 import com.mardous.booming.extensions.getBottomInsets
@@ -99,6 +99,7 @@ import com.mardous.booming.ui.screen.player.styles.plainstyle.PlainPlayerFragmen
 import com.mardous.booming.util.ADAPTIVE_CONTROLS
 import com.mardous.booming.util.ADD_EXTRA_CONTROLS
 import com.mardous.booming.util.CAROUSEL_EFFECT
+import com.mardous.booming.util.CAR_DISPLAY_IMMERSIVE_MODE
 import com.mardous.booming.util.CIRCLE_PLAY_BUTTON
 import com.mardous.booming.util.ENABLE_ROTATION_LOCK
 import com.mardous.booming.util.HOLD_TAB_TO_SEARCH
@@ -180,10 +181,13 @@ abstract class AbsSlidingMusicPanelActivity : AbsBaseActivity(),
 
         binding = SlidingMusicPanelLayoutBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        binding.root.applySystemBarInsetPreference()
+        binding.root.applyCarDisplayImmersiveLayout()
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.sheetView) { _, insets ->
-            insets.also { windowInsets = it }
+            insets.also {
+                windowInsets = it
+                updateBottomSheetForCurrentInsets()
+            }
         }
 
         chooseFragmentForTheme()
@@ -250,6 +254,7 @@ abstract class AbsSlidingMusicPanelActivity : AbsBaseActivity(),
 
     override fun onResume() {
         super.onResume()
+        applySystemBarMode()
         Preferences.registerOnSharedPreferenceChangeListener(this)
         LyricsOverlayService.sync(applicationContext)
         if (bottomSheetBehavior.state == STATE_EXPANDED) {
@@ -529,6 +534,12 @@ abstract class AbsSlidingMusicPanelActivity : AbsBaseActivity(),
     override fun onSharedPreferenceChanged(preferences: SharedPreferences, key: String?) {
         when (key) {
             TAB_TITLES_MODE -> navigationView.labelVisibilityMode = Preferences.bottomTitlesMode
+            CAR_DISPLAY_IMMERSIVE_MODE -> {
+                applySystemBarMode()
+                binding.root.applyCarDisplayImmersiveLayout()
+                ViewCompat.requestApplyInsets(binding.root)
+                updateBottomSheetForCurrentInsets()
+            }
             HOLD_TAB_TO_SEARCH -> {
                 if (preferences.getBoolean(key, true)) {
                     setupNavigationViewGestures()
@@ -615,6 +626,16 @@ abstract class AbsSlidingMusicPanelActivity : AbsBaseActivity(),
         playerFragment = whichFragment(R.id.player_container)
         miniPlayerFragment = whichFragment(R.id.mini_player_container)
         miniPlayerFragment?.view?.setOnClickListener { expandPanel() }
+    }
+
+    private fun updateBottomSheetForCurrentInsets() {
+        if (!::bottomSheetBehavior.isInitialized) return
+        if (panelState == STATE_EXPANDED) return
+        hideBottomSheet(
+            hide = playerViewModel.queue.isEmpty(),
+            animate = false,
+            isBottomNavVisible = navigationView.isVisible && navigationView is BottomNavigationView
+        )
     }
 
     private val bottomSheetCallback = object : BottomSheetCallback() {

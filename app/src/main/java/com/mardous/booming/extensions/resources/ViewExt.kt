@@ -617,11 +617,7 @@ fun BottomSheetBehavior<*>.peekHeightAnimate(value: Int): Animator {
 }
 
 fun AppBarLayout.setupStatusBarForeground() {
-    statusBarForeground = if (Preferences.ignoreSystemBarInsets) {
-        null
-    } else {
-        MaterialShapeDrawable.createWithElevationOverlay(context)
-    }
+    statusBarForeground = MaterialShapeDrawable.createWithElevationOverlay(context)
 }
 
 fun CompoundButton.animateToggle() = post { isChecked = !isChecked }

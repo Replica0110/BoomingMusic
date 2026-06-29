@@ -26,6 +26,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewGroupCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
@@ -49,6 +50,7 @@ abstract class AbsThemeActivity : AppCompatActivity() {
         enableEdgeToEdge(navigationBarStyle = SystemBarStyle.auto(TRANSPARENT, TRANSPARENT))
         super.onCreate(savedInstanceState)
         windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
+        applySystemBarMode()
         if (hasQ()) {
             window.isNavigationBarContrastEnforced = false
             window.decorView.isForceDarkAllowed = false
@@ -85,6 +87,18 @@ abstract class AbsThemeActivity : AppCompatActivity() {
 
     fun setLightNavigationBar(lightNavigationBar: Boolean = surfaceColor().isColorLight) {
         windowInsetsController?.isAppearanceLightNavigationBars = lightNavigationBar
+    }
+
+    protected fun applySystemBarMode() {
+        windowInsetsController?.let { controller ->
+            controller.systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            if (Preferences.carDisplayImmersiveMode) {
+                controller.hide(WindowInsetsCompat.Type.systemBars())
+            } else {
+                controller.show(WindowInsetsCompat.Type.systemBars())
+            }
+        }
     }
 
     override fun onDestroy() {

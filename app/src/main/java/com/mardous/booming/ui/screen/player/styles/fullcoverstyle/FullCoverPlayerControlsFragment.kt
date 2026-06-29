@@ -34,6 +34,7 @@ import androidx.core.view.updatePadding
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.mardous.booming.R
+import com.mardous.booming.extensions.systemBarsForLayout
 import com.mardous.booming.core.model.action.NowPlayingAction
 import com.mardous.booming.core.model.player.PlayerColorScheme
 import com.mardous.booming.core.model.player.PlayerTintTarget
@@ -104,7 +105,7 @@ class FullCoverPlayerControlsFragment : AbsPlayerControlsFragment(R.layout.fragm
         setupQueueMenuItem()
 
         ViewCompat.setOnApplyWindowInsetsListener(view) { v: View, insets: WindowInsetsCompat ->
-            val navigationBar = insets.getInsets(Type.systemBars())
+            val navigationBar = insets.systemBarsForLayout()
             v.updatePadding(bottom = navigationBar.bottom)
             val displayCutout = insets.getInsets(Type.displayCutout())
             v.updatePadding(left = displayCutout.left, right = displayCutout.right)

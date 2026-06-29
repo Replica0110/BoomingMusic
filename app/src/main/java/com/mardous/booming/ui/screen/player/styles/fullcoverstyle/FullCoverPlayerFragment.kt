@@ -30,6 +30,7 @@ import androidx.core.view.WindowInsetsCompat.Type
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import com.mardous.booming.R
+import com.mardous.booming.extensions.systemBarsForLayout
 import com.mardous.booming.coil.DEFAULT_SONG_IMAGE
 import com.mardous.booming.coil.songImage
 import com.mardous.booming.core.model.action.NowPlayingAction
@@ -73,7 +74,7 @@ class FullCoverPlayerFragment : AbsPlayerFragment(R.layout.fragment_full_cover_p
         setupListeners()
         setupNextSongVisibility()
         ViewCompat.setOnApplyWindowInsetsListener(binding.toolbarContainer) { v: View, insets: WindowInsetsCompat ->
-            val statusBar = insets.getInsets(Type.systemBars())
+            val statusBar = insets.systemBarsForLayout()
             v.updatePadding(left = statusBar.left, top = statusBar.top, right = statusBar.right)
             val displayCutout = insets.getInsets(Type.displayCutout())
             v.updatePadding(left = displayCutout.left, right = displayCutout.right)

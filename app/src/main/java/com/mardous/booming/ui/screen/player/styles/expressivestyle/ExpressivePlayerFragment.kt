@@ -15,6 +15,7 @@ import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.media3.common.Player
 import com.mardous.booming.R
+import com.mardous.booming.extensions.systemBarsForLayout
 import com.mardous.booming.core.model.action.NowPlayingAction
 import com.mardous.booming.core.model.player.PlayerColorScheme
 import com.mardous.booming.core.model.player.PlayerColorSchemeMode
@@ -113,7 +114,7 @@ class ExpressivePlayerFragment : AbsPlayerFragment(R.layout.fragment_expressive_
             }
         }
         ViewCompat.setOnApplyWindowInsetsListener(view) { v: View, insets: WindowInsetsCompat ->
-            val systemBars = insets.getInsets(Type.systemBars())
+            val systemBars = insets.systemBarsForLayout()
             v.updatePadding(top = systemBars.top, bottom = systemBars.bottom)
             val displayCutout = insets.getInsets(Type.displayCutout())
             v.updatePadding(left = displayCutout.left, right = displayCutout.right)

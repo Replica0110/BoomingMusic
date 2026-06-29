@@ -567,8 +567,8 @@
     <string name="hold_tab_to_search_summary">长按任意导航栏选项卡打开搜索界面。</string>
     <string name="larger_header_image_title">更大的封面图像</string>
     <string name="larger_header_image_summary">在专辑、艺人和播放列表的详细信息中显示更大的封面图像。</string>
-    <string name="ignore_system_bar_insets_title">车机边缘模式</string>
-    <string name="ignore_system_bar_insets_summary">不为状态栏和导航栏预留空间。适用于没有系统栏的车机屏幕。</string>
+    <string name="ignore_system_bar_insets_title">车机沉浸模式</string>
+    <string name="ignore_system_bar_insets_summary">隐藏状态栏和导航栏，让车机界面以全屏方式显示。</string>
     <string name="lyrics_center_current_line_title">居中当前歌词</string>
     <string name="lyrics_center_current_line_summary">将当前歌词行居中显示，而不是左对齐。</string>
     <string name="lyrics_custom_font_title">自定义歌词字体</string>
@@ -950,6 +950,7 @@
     <string name="rg_without_tag">不带标签</string>
     <string name="lyrics_karaoke_style_title">卡拉 OK 风格歌词</string>
     <string name="lyrics_karaoke_style_summary">为逐词同步歌词启用卡拉 OK 风格效果。请注意，本功能为试验性功能。</string>
+    <string name="lyrics_show_transliteration_summary">存在音译时显示音译</string>
     <string name="floating_lyrics_header">悬浮歌词</string>
     <string name="desktop_lyrics_title">桌面歌词</string>
     <string name="desktop_lyrics_summary">通过悬浮窗在其他应用上显示当前歌词。</string>
@@ -980,4 +981,7 @@
     <string name="overlay_permission_required">请允许显示在其他应用上层以使用悬浮歌词。</string>
     <string name="lyrics_bold_synced_title">同步歌词显示为粗体</string>
     <string name="lyrics_bold_synced_summary">以粗体显示同步歌词。</string>
+    <string name="lyrics_show_translation_title">显示翻译</string>
+    <string name="lyrics_show_translation_summary">存在翻译时显示翻译</string>
+    <string name="lyrics_show_transliteration_title">显示音译</string>
 </resources>

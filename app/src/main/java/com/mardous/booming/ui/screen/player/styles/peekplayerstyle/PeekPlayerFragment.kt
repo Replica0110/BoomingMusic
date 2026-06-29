@@ -28,6 +28,7 @@ import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import com.google.android.material.color.MaterialColors
 import com.mardous.booming.R
+import com.mardous.booming.extensions.systemBarsForLayout
 import com.mardous.booming.core.model.player.*
 import com.mardous.booming.core.model.theme.NowPlayingScreen
 import com.mardous.booming.databinding.FragmentPeekPlayerBinding
@@ -70,7 +71,7 @@ class PeekPlayerFragment : AbsPlayerFragment(R.layout.fragment_peek_player) {
             insets
         }
         ViewCompat.setOnApplyWindowInsetsListener(binding.songInfo) { v: View, insets: WindowInsetsCompat ->
-            val navigationBar = insets.getInsets(Type.systemBars())
+            val navigationBar = insets.systemBarsForLayout()
             v.updatePadding(bottom = navigationBar.bottom)
             insets
         }

@@ -105,8 +105,8 @@ object Preferences : KoinComponent {
     val isCustomFont: Boolean
         get() = preferences.getBoolean(USE_CUSTOM_FONT, true)
 
-    val ignoreSystemBarInsets: Boolean
-        get() = preferences.getBoolean(IGNORE_SYSTEM_BAR_INSETS, false)
+    val carDisplayImmersiveMode: Boolean
+        get() = preferences.getBoolean(CAR_DISPLAY_IMMERSIVE_MODE, false)
 
     val appBarMode: TopAppBarLayout.AppBarMode
         get() = when (preferences.requireString(APPBAR_MODE, AppBarMode.COMPACT)) {
@@ -563,7 +563,7 @@ interface UpdateSearchMode {
 const val BLACK_THEME = "black_theme"
 const val MATERIAL_YOU = "material_you"
 const val USE_CUSTOM_FONT = "use_custom_font"
-const val IGNORE_SYSTEM_BAR_INSETS = "ignore_system_bar_insets"
+const val CAR_DISPLAY_IMMERSIVE_MODE = "ignore_system_bar_insets"
 const val APPBAR_MODE = "appbar_mode"
 const val GENERAL_THEME = "general_theme"
 const val LIBRARY_CATEGORIES = "library_categories"
