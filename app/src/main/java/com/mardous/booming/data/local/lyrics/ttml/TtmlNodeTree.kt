@@ -22,9 +22,8 @@ internal class TtmlNodeTree {
     private var rootNode: TtmlNode? = null
 
     private val accompaniments = linkedMapOf<TtmlAccompaniment.Type, TtmlAccompaniment>()
-
-    private val translations = mutableSetOf<TtmlTranslation>()
     private val agents = mutableSetOf<TtmlAgent>()
+    private var openNodes = mutableMapOf<Int, TtmlNode?>()
 
     private var lastTransliterationType: TtmlAccompaniment.Type.Transliteration? = null
     private val openTransliteration: TtmlTransliteration?
@@ -34,12 +33,11 @@ internal class TtmlNodeTree {
     private val openTranslation: TtmlTranslation?
         get() = getOpenAccompaniment(lastTranslationType)
 
-    private var openNodes = mutableMapOf<Int, TtmlNode?>()
-
     private var background = false
     private var closed = false
 
-    var isInTransliteration: Boolean = false
+    private var isInTransliteration: Boolean = false
+
     val hasRoot: Boolean
         get() = rootNode?.type == TtmlNode.NODE_BODY && rootNode?.closed == false
 
@@ -223,7 +221,10 @@ internal class TtmlNodeTree {
         if (openLine != null && openLine.key != null) {
             var openTranslation = this.openTranslation
             if (openTranslation == null || openTranslation.type.lang != lang) {
-                openTranslation = getOpenAccompaniment(TtmlAccompaniment.Type.Translation(lang))
+                openTranslation = accompaniments.values
+                    .firstNotNullOfOrNull { acc ->
+                        if (acc is TtmlTranslation && acc.type.lang == lang) acc else null
+                    }
             }
             if (openTranslation == null) {
                 openTranslation = createTranslation(lang, inLine = true)
@@ -263,8 +264,11 @@ internal class TtmlNodeTree {
             val closed = openNode.close()
             openNodes.remove(type)
             if (openNode.type == TtmlNode.NODE_BODY) {
-                translations.filter { it.isInLine }
-                    .forEach { it.close() }
+                for (acc in accompaniments.values) {
+                    if (acc is TtmlTranslation && acc.isInLine) {
+                        acc.close()
+                    }
+                }
             }
             return closed
         }
@@ -282,12 +286,23 @@ internal class TtmlNodeTree {
         return rootNode.close()
     }
 
+    /**
+     * Converts the built node tree into the final [SyncedLyrics] model.
+     * This involves:
+     * 1. Extracting all line nodes (<p>) from the hierarchy.
+     * 2. Resolving timing for lines and words (calculating duration if missing).
+     * 3. Mapping TTML agents to [LyricsActor] types (Voice1, Voice2, Group).
+     * 4. Merging translations and transliterations based on the line's key.
+     * 5. Adding a blank line at the start if the first lyric is delayed.
+     */
     fun toLyrics(trackLength: Long): SyncedLyrics? {
         checkNotNull(rootNode) { "The node tree does not have a root" }
         check(closed) { "The node tree must be closed to obtain nested data" }
 
         val duration = rootNode!!.dur.takeIf { it > -1 } ?: trackLength
         val sectionNodes = rootNode!!.getChildren(TtmlNode.NODE_SECTION)
+
+        // Flatten the hierarchy to get all lines across all sections
         val lineNodes = sectionNodes.flatMap { it.getChildren(TtmlNode.NODE_LINE) }.sortedBy { it.begin }
         val translation = getClosedTranslation()
         val transliteration = getClosedTransliteration()
@@ -303,6 +318,8 @@ internal class TtmlNodeTree {
             for (i in lineNodes.indices) {
                 val line = lineNodes[i]
 
+                // Logic to map TTML agents to Voice1/Voice2/Group.
+                // It alternates between Voice1 and Voice2 when the agent ID changes.
                 val actor: LyricsActor? = line.agent?.let { agent ->
                     when (agent.type) {
                         TtmlAgent.Type.Person -> {
@@ -335,12 +352,15 @@ internal class TtmlNodeTree {
                     }
                 }
 
+                // If end time is not specified, use the start time of the next line
                 if (line.end == -1L) {
                     line.end = (if (i < lastLineIndex) lineNodes[i + 1].begin else duration)
                 }
                 if (line.dur == -1L) {
                     line.dur = (line.end - line.begin)
                 }
+
+                // If the line has no direct text, it likely has word nodes (<span> tags)
                 if (line.text.isNullOrBlank()) {
                     val wordNodes = line.getChildren(TtmlNode.NODE_WORD).sortedBy { it.begin }
                     val words = nodesToWords(line, wordNodes, actor)
@@ -355,6 +375,7 @@ internal class TtmlNodeTree {
                         )
                     )
                 } else {
+                    // Simple line with static text
                     lines.add(
                         createSyncedLine(
                             line = line,
@@ -429,6 +450,10 @@ internal class TtmlNodeTree {
         )
     }
 
+    /**
+     * Converts a list of word nodes into [SyncedLyrics.Word] models.
+     * Calculates absolute and relative offsets within the line.
+     */
     private fun nodesToWords(
         line: TtmlNode,
         wordNodes: List<TtmlNode>,
@@ -439,6 +464,7 @@ internal class TtmlNodeTree {
             val lastWordIndex = wordNodes.lastIndex
             for (j in wordNodes.indices) {
                 val word = wordNodes[j]
+                // Resolve word end time based on the next word's start time
                 if (word.end == -1L) {
                     word.end = (if (j < lastWordIndex) wordNodes[j + 1].begin else line.end)
                 }
@@ -446,6 +472,7 @@ internal class TtmlNodeTree {
                     word.dur = (word.end - word.begin)
                 }
                 val text = word.text.orEmpty()
+                // Calculate character indices for highlighting during playback
                 val startIndex = words.filter { it.isBackground == word.background }
                     .sumOf { it.content.length }
                 val endIndex = startIndex + (text.length - 1)
