@@ -19,6 +19,7 @@ package com.mardous.booming.extensions
 
 import android.content.Context
 import android.content.Intent
+import android.content.ActivityNotFoundException
 import androidx.core.app.ShareCompat
 import androidx.core.net.toUri
 import com.mardous.booming.R
@@ -31,6 +32,8 @@ const val MIME_TYPE_APPLICATION = "application/*"
 const val EXTRA_SONG = "extra_song"
 const val EXTRA_SONGS = "extra_songs"
 const val EXTRA_PLAYLISTS = "extra_playlists"
+
+private const val LYRICO_ACTION_EDIT_TAG = "com.lonx.lyrico.action.EDIT_TAG"
 
 fun String.openWeb(): Intent =
     Intent(Intent.ACTION_VIEW, this.toUri())
@@ -63,6 +66,18 @@ fun Context.getShareSongsIntent(songs: List<Song>): Intent {
         return intent.createChooserIntent()
     }
     return Intent()
+}
+
+fun Context.openLyricoTagEditor(song: Song) {
+    val intent = Intent(LYRICO_ACTION_EDIT_TAG)
+        .setDataAndType(song.uri, MIME_TYPE_AUDIO)
+        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+    try {
+        startActivity(intent)
+    } catch (_: ActivityNotFoundException) {
+        showToast(R.string.lyrico_tag_editor_not_found)
+    }
 }
 
 fun Intent.toChooser(chooserTitle: CharSequence? = null): Intent =

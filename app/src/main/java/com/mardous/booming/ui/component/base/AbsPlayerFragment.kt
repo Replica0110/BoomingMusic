@@ -62,7 +62,6 @@ import com.mardous.booming.core.model.action.NowPlayingAction
 import com.mardous.booming.core.model.player.PlayerColorScheme
 import com.mardous.booming.core.model.player.PlayerColorSchemeMode
 import com.mardous.booming.core.model.player.PlayerTintTarget
-import com.mardous.booming.data.local.EditTarget
 import com.mardous.booming.data.model.Genre
 import com.mardous.booming.data.model.Song
 import com.mardous.booming.extensions.currentFragment
@@ -74,6 +73,7 @@ import com.mardous.booming.extensions.navigation.albumDetailArgs
 import com.mardous.booming.extensions.navigation.artistDetailArgs
 import com.mardous.booming.extensions.navigation.findActivityNavController
 import com.mardous.booming.extensions.navigation.genreDetailArgs
+import com.mardous.booming.extensions.openLyricoTagEditor
 import com.mardous.booming.extensions.requestView
 import com.mardous.booming.extensions.resources.animateBackgroundColor
 import com.mardous.booming.extensions.resources.animateTintColor
@@ -96,7 +96,6 @@ import com.mardous.booming.ui.screen.player.PlayerGesturesController
 import com.mardous.booming.ui.screen.player.PlayerGesturesController.GestureType
 import com.mardous.booming.ui.screen.player.PlayerViewModel
 import com.mardous.booming.ui.screen.player.cover.CoverPagerFragment
-import com.mardous.booming.ui.screen.tageditor.SongTagEditorActivity
 import com.mardous.booming.util.NOW_PLAYING_EXTRA_INFO
 import com.mardous.booming.util.Preferences
 import kotlinx.coroutines.flow.combine
@@ -508,9 +507,7 @@ abstract class AbsPlayerFragment(@LayoutRes layoutRes: Int) : Fragment(layoutRes
             }
 
             NowPlayingAction.TagEditor -> {
-                val tagEditorIntent = Intent(requireContext(), SongTagEditorActivity::class.java)
-                tagEditorIntent.putExtra(AbsTagEditorActivity.EXTRA_TARGET, EditTarget.song(currentSong))
-                startActivity(tagEditorIntent)
+                requireContext().openLyricoTagEditor(currentSong)
                 true
             }
 

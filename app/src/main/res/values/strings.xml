@@ -105,6 +105,7 @@
     <string name="playlist_empty_text">Empty playlist</string>
     <string name="action_lyrics_editor">Lyrics editor</string>
     <string name="action_tag_editor">Tag editor</string>
+    <string name="lyrico_tag_editor_not_found">Lyrico tag editor not found.</string>
     <string name="saving_changes">Saving changes</string>
     <string name="changes_saved_successfully">Changes saved successfully.</string>
     <string name="could_not_save_some_changes">Couldn\'t save some changes.</string>

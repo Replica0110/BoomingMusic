@@ -17,7 +17,6 @@
 package com.mardous.booming.ui.screen.info
 
 import android.app.Dialog
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -64,16 +63,14 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.mardous.booming.R
-import com.mardous.booming.data.local.EditTarget
 import com.mardous.booming.data.model.Song
 import com.mardous.booming.extensions.isLandscape
-import com.mardous.booming.ui.component.base.AbsTagEditorActivity
+import com.mardous.booming.extensions.openLyricoTagEditor
 import com.mardous.booming.ui.component.base.goToDestination
 import com.mardous.booming.ui.component.compose.BottomSheetDialogSurface
 import com.mardous.booming.ui.component.compose.ErrorView
 import com.mardous.booming.ui.component.compose.SmallHeader
 import com.mardous.booming.ui.screen.lyrics.LyricsEditorFragmentArgs
-import com.mardous.booming.ui.screen.tageditor.SongTagEditorActivity
 import com.mardous.booming.ui.theme.BoomingMusicTheme
 import com.mardous.booming.ui.theme.SurfaceColorTokens
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -130,13 +127,7 @@ class SongDetailFragment : BottomSheetDialogFragment() {
                             )
                         },
                         onTagEditorClick = {
-                            val tagEditor =
-                                Intent(requireContext(), SongTagEditorActivity::class.java)
-                            tagEditor.putExtra(
-                                AbsTagEditorActivity.EXTRA_TARGET,
-                                EditTarget.song(song)
-                            )
-                            startActivity(tagEditor)
+                            requireContext().openLyricoTagEditor(song)
                         }
                     )
                 }

@@ -35,6 +35,7 @@ import com.mardous.booming.extensions.navigation.artistDetailArgs
 import com.mardous.booming.extensions.navigation.findActivityNavController
 import com.mardous.booming.extensions.navigation.genreDetailArgs
 import com.mardous.booming.extensions.navigation.songDetailArgs
+import com.mardous.booming.extensions.openLyricoTagEditor
 import com.mardous.booming.extensions.showToast
 import com.mardous.booming.extensions.toChooser
 import com.mardous.booming.core.model.shuffle.OpenShuffleMode
@@ -47,7 +48,6 @@ import com.mardous.booming.ui.screen.library.LibraryViewModel
 import com.mardous.booming.ui.screen.player.PlayerViewModel
 import com.mardous.booming.ui.screen.tageditor.AlbumTagEditorActivity
 import com.mardous.booming.ui.screen.tageditor.ArtistTagEditorActivity
-import com.mardous.booming.ui.screen.tageditor.SongTagEditorActivity
 import com.mardous.booming.util.m3u.M3UWriter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -119,10 +119,7 @@ fun Song.onSongMenu(
         }
 
         R.id.action_tag_editor -> {
-            val tagEditorIntent =
-                Intent(fragment.requireContext(), SongTagEditorActivity::class.java)
-            tagEditorIntent.putExtra(AbsTagEditorActivity.EXTRA_TARGET, EditTarget.song(this))
-            fragment.startActivity(tagEditorIntent)
+            fragment.requireContext().openLyricoTagEditor(this)
             true
         }
 
